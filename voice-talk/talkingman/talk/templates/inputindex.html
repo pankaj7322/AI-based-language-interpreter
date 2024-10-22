@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Selection</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Styling for the select box */
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:disabled {
+            background-color: #c0c0c0;
+            color: #7d7d7d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h2>AI Based Language Interpreter Using AR Model</h2>
+        </header>
+        <div class="wrapper">
+            {{ input_language }}
+            <div class="selection_box">
+                
+            <form action="{% url 'handle_input_selection' %}" method="POST">
+                {% csrf_token %}
+
+                <!-- Dropdown (Select) for Input Type Selection -->
+                <label for="inputType">Choose Input Type:</label>
+                <select id="inputType" name="selectedIndex" onchange="enableNextButton()">
+                    <option value="">Select Input Type</option>
+                    <option value="text">Text</option>
+                    <option value="image">Image</option>
+                    <option value="audio">Audio</option>
+                </select>
+
+                <!-- Next Button -->
+                <button type="button" onclick= "redirectHome()" id="BackButton">Back</button> 
+                <button type="submit" id="nextButton" disabled>Next</button>
+            </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const backButton = document.getElementById('BackButton');
+        function enableNextButton() {
+            const selectedIndex = document.getElementById("inputType").value;
+            const nextButton = document.getElementById("nextButton");
+          
+
+            // Enable Next button only when a valid option is selected
+            nextButton.disabled = selectedIndex === "" ? true : false;
+        }
+
+        function redirectHome(){
+            window.location.href = "{% url 'select_language' %}";
+        }
+    </script>
+</body>
+
+</html>

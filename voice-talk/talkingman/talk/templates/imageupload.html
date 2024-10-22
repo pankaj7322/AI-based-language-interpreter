@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Based Language Interpreter Using AR Model</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h2>AI Based Language Interpreter Using AR Model</h2>
+    </header>
+    <div class="language">
+      <h1>{{ input_language }} --- {{ output_language }}</h1>
+    </div>
+    <div class="box">
+      <div class="box1">
+        <div class="box11">
+          <h2>Upload Image for OCR</h2>
+          <input type="file" id="imageInput" accept="image/*" aria-label="Select image for OCR" />
+          <button id="BackButton">Back</button>
+          <button id="uploadImageButton">Upload Image</button>
+
+          <div class="result-container" id="result">
+            <p>Translated or Extracted Text will appear here...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box2">
+        <video id="avatar" class="avatar" muted loop aria-label="Avatar speaking video">
+          <source src="{% static 'images/AR.mp4' %}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const uploadImageButton = document.getElementById("uploadImageButton");
+      const result = document.getElementById("result");
+      const avatar = document.getElementById("avatar");
+      const synth = window.speechSynthesis;
+
+      // Load voices
+      window.speechSynthesis.onvoiceschanged = function () {
+        const voices = speechSynthesis.getVoices();
+        voices.forEach(function (voice) {
+          console.log(`${voice.name} (${voice.lang})`);
+        });
+      };
+
+      const inputLanguage = sessionStorage.getItem('input_language') || "{{ input_language }}";
+      const outputLanguage = sessionStorage.getItem('output_language') || "{{ output_language }}";
+
+      // Speak text function
+      function speakText(text, language) {
+        const utterThis = new SpeechSynthesisUtterance(text);
+        const voices = speechSynthesis.getVoices();
+
+        // Find appropriate voice
+        let selectedVoice = voices.find(voice => voice.lang.includes(language)) ||
+                            voices.find(voice => voice.lang.startsWith(language.slice(0, 2))) ||
+                            voices.find(voice => voice.lang === 'en-US'); // Fallback
+
+        if (selectedVoice) {
+          utterThis.voice = selectedVoice;
+          utterThis.lang = selectedVoice.lang;
+          console.log(`Using voice: ${selectedVoice.name} for language: ${selectedVoice.lang}`);
+        } else {
+          console.warn(`No suitable voice found for language ${language}.`);
+        }
+
+        // Play avatar and speak
+        avatar.play();
+        avatar.classList.add("talking");
+        synth.speak(utterThis);
+
+        utterThis.onend = function () {
+          avatar.pause();
+          avatar.currentTime = 0;
+          avatar.classList.remove("talking");
+        };
+      }
+
+      // Image upload functionality
+      uploadImageButton.addEventListener("click", async function () {
+        const imageInput = document.getElementById("imageInput").files[0];
+
+        if (!imageInput) {
+          alert("Please select an image file.");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageInput);
+        formData.append('input_language', inputLanguage);
+        formData.append('output_language', outputLanguage);
+
+        result.innerHTML = `<p>Processing image...</p>`;
+
+        try {
+          const response = await fetch("{% url 'upload_image' %}", {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const extractedText = data.translated_text || data.error || "Image upload failed.";
+          result.innerHTML = `<p>${extractedText}</p>`;
+
+          if (!data.error) {
+            speakText(extractedText, outputLanguage);
+          } else {
+            console.error("Translation error:", data.error);
+          }
+        } catch (error) {
+          console.error("Error uploading image file:", error);
+          result.innerHTML = `<p>Error: ${error.message}</p>`;
+        }
+      });
+
+      // Back button functionality
+      const nextButton = document.getElementById("BackButton");
+      nextButton.addEventListener("click", function () {
+        window.location.href = "{% url 'select_language' %}";
+      });
+    });
+  </script>
+</body>
+
+</html>

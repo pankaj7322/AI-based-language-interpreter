@@ -1,0 +1,156 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .container {
+    width: 100%;
+    height: 100vh;
+  }
+
+  header {
+    width: 100%;
+    height: 70px;
+    background-color: rgb(147, 177, 15);
+    text-align: center;
+    padding-top: 20px;
+  }
+.wrapper{
+    display: flex;
+}
+.text-box-container,.avatar-container,.result-container{
+    width: 100%;
+}
+  h2 {
+    color: white;
+    font-size: 34px;
+  }
+
+  .box {
+    width: 100%;
+    display: flex;
+  }
+
+  .box1 {
+    width: 100%;
+    display: flex;
+  }
+
+  .box2 {
+    width: 30%;
+  }
+
+  .box11 {
+    width: 60%;
+  }
+
+  textarea,
+  input[type="file"] {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+
+  textarea:focus,
+  input[type="file"]:focus {
+    border-color: #4caf50;
+  }
+
+  button {
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 10px 0;
+    transition: background-color 0.3s;
+    width: 40%;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+.language{
+  width:150px;
+  height:70px;
+  margin:0 auto;
+  margin-top:5px;
+
+  
+
+}
+  video.avatar {
+    width: 350px;
+    height: auto;
+    border-radius: 50%;
+    margin: 20px auto;
+    display: block;
+  }
+
+  .result-container {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    min-height: 50px;
+    text-align: center;
+    width:70%;
+  }
+
+  .result-container p {
+    margin: 0;
+    font-size: 18px;
+    color: #555;
+  }
+
+  /* .flex-section {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    padding: 20px;
+  } */
+
+  .talking {
+    animation: moveMouth 0.3s infinite alternate;
+  }
+
+  @keyframes moveMouth {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(5px);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .container {
+      padding: 20px;
+    }
+  }
+
+.selection_box{
+    width:400px;
+    height:400px;
+    position: absolute;
+    left:50%;
+    top:50%;
+    transform: translate(-50%,-50%);
+}
+.selection_box select{
+    padding:20px;
+    border:1px solid rgb(217, 217, 217);
+    margin-top:10px;
+    margin-left:10px;
+}

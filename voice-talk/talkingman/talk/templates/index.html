@@ -1,0 +1,410 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multilingual Translator with Avatar</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      height: 70px;
+      background-color: rgb(147, 177, 15);
+      text-align: center;
+      padding-top: 20px;
+
+      h2 {
+        color: white;
+        font-size: 34px;
+
+      }
+    }
+    .box {
+      width: 100%;
+      display: flex;
+    }
+
+    .box1 {
+      width: 100%;
+      display: flex;
+    }
+
+    .box2 {
+      width: 30%;
+
+    }
+
+    .box11 {
+      width: 60%;
+    }
+
+    .box12 {
+      width: 40%;
+
+    }
+
+    textarea,
+    select {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus,
+    select:focus {
+      border-color: #4caf50;
+    }
+
+    button,
+    input[type="file"] {
+      padding: 12px 20px;
+      font-size: 16px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: background-color 0.3s;
+      width: 40%;
+    }
+
+    button:hover,
+    input[type="file"]:hover {
+      background-color: #45a049;
+
+    }
+
+    video.avatar {
+      width: 350px;
+      height: auto;
+      border-radius: 50%;
+      margin: 20px auto;
+      display: block;
+    }
+
+    .result-container {
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      min-height: 50px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .result-container p {
+      margin: 0;
+      font-size: 18px;
+      color: #555;
+    }
+
+    .flex-section {
+      display: flex;
+      flex-direction: column;
+      width: 50%;
+      padding: 20px;
+    }
+
+    .flex-section>div {
+      margin: 10px 0;
+      width: 100%;
+    }
+
+    .talking {
+      animation: moveMouth 0.3s infinite alternate;
+    }
+
+    @keyframes moveMouth {
+      0% {
+        transform: translateY(0);
+      }
+
+      100% {
+        transform: translateY(5px);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h2>Multilingual Translator</h2>
+    </header>
+    <div class="box">
+      <div class="box1">
+        <div class="box11">
+          <div class="flex-section">
+            <textarea id="textInput" placeholder="Enter text to translate..."></textarea>
+
+            <select id="languageSelect">
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="te">Telugu</option>
+              <option value="ta">Tamil</option>
+              <!-- Add more languages as needed -->
+          </select>
+          
+             
+            <button id="translateTextButton">Translate & Speak Text</button>
+          </div>
+
+          <h2>Upload Image for OCR</h2>
+          <input type="file" id="imageInput" accept="image/*" />
+          <button id="uploadImageButton">Upload Image</button>
+
+          <h2>Upload Audio for Speech-to-Text</h2>
+          <input type="file" id="audioInput" accept="audio/mp3" />
+          <button id="uploadAudioButton">Upload Audio</button>
+
+
+
+          <div class="result-container" id="result">
+            <p>Translated or Extracted Text will appear here...</p>
+          </div>
+        </div>
+        <div class="box12">
+          <img id="selectedImage" style="display:none; width: 200px; height: auto; margin-top: 10px;" />
+
+        </div>
+
+      </div>
+
+
+      <div class="box2">
+   
+        <video id="avatar" class="avatar" muted loop>
+          <source src="{% static 'images/avatar2.mp4' %}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    const translateTextButton = document.getElementById("translateTextButton");
+    const uploadImageButton = document.getElementById("uploadImageButton");
+    const uploadAudioButton = document.getElementById("uploadAudioButton");
+    const result = document.getElementById("result");
+    const avatar = document.getElementById("avatar");
+    const synth = window.speechSynthesis;
+
+    // Load voices when they change
+    window.speechSynthesis.onvoiceschanged = function () {
+    const voices = speechSynthesis.getVoices();
+    voices.forEach(function (voice) {
+      console.log(voice.name + ' (' + voice.lang + ')');
+    });
+  };
+
+  function speakText(text, language) {
+  const utterThis = new SpeechSynthesisUtterance(text);
+  utterThis.lang = language;
+
+  const voices = speechSynthesis.getVoices();
+  let selectedVoice = null;
+
+  // Check for Telugu (te-IN) voice
+  if (language === 'te') {
+    selectedVoice = voices.find(voice => voice.lang === 'te-IN');
+    if (!selectedVoice) {
+      console.warn("Telugu voice not found. Using default voice.");
+    }
+  }
+
+  // Check for Tamil (ta-IN) voice
+  if (language === 'ta') {
+    selectedVoice = voices.find(voice => voice.lang === 'ta-IN');
+    if (!selectedVoice) {
+      console.warn("Tamil voice not found. Using default voice.");
+    }
+  }
+
+  // Check for Punjabi (pa-IN) voice
+  if (language === 'pa') {
+    selectedVoice = voices.find(voice => voice.lang === 'pa-IN');
+    if (!selectedVoice) {
+      console.warn("Punjabi voice not found. Using default voice.");
+    }
+  }
+
+  if (selectedVoice) {
+    utterThis.voice = selectedVoice;
+  }
+
+  // Delay speaking to allow voices to load
+  setTimeout(() => {
+    avatar.play();
+    avatar.currentTime = 0;
+    avatar.classList.add("talking");
+    synth.speak(utterThis);
+  }, 100);
+
+  utterThis.onend = function () {
+    avatar.pause();
+    avatar.currentTime = 0;
+    avatar.classList.remove("talking");
+  };
+
+  }
+
+    // Translate Text and Speak
+    translateTextButton.addEventListener("click", async function () {
+      const text = document.getElementById("textInput").value;
+      const language = document.getElementById("languageSelect").value;
+
+      if (text.trim() !== "") {
+        const response = await fetch("{% url 'translate' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: new URLSearchParams({
+            'text': text,
+            'language': language
+          })
+        });
+
+        const data = await response.json();
+        const translatedText = data.translated_text || "Translation failed.";
+        result.innerHTML = `<p>${translatedText}</p>`;
+
+        speakText(translatedText, language);
+      } else {
+        alert("Please enter some text.");
+      }
+    });
+
+    // Move this section out of the 'uploadImageButton' event listener
+    document.getElementById("imageInput").addEventListener("change", function () {
+    const file = this.files[0];
+    const imagePreview = document.getElementById("selectedImage");
+
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        imagePreview.src = e.target.result; // Set the source of the img element to the file
+        imagePreview.style.display = "block"; // Make the image visible
+      };
+
+      reader.readAsDataURL(file); // Read the file and trigger the onload event
+    } else {
+      imagePreview.src = ""; // Clear the preview if no file is selected
+      imagePreview.style.display = "none"; // Hide the image
+    }
+  });
+
+  // Image upload functionality
+  uploadImageButton.addEventListener("click", async function () {
+    const imageInput = document.getElementById("imageInput").files[0];
+    const language = document.getElementById("languageSelect").value;
+
+    if (!imageInput) {
+      alert("Please select an image file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', imageInput);
+    formData.append('language', language);
+
+    try {
+      const response = await fetch("{% url 'upload_image' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      const extractedText = data.translated_text || data.error || "Image upload failed.";
+      result.innerHTML = `<p>${extractedText}</p>`;
+
+      // Optional: Use the extracted text in the avatar or for further translation
+      speakText(extractedText, language);
+    } catch (error) {
+      console.error("Error uploading image file:", error);
+      alert("An error occurred while uploading the image file.");
+    }
+  });
+
+    uploadAudioButton.addEventListener("click", async function () {
+  const audioInput = document.getElementById("audioInput").files[0];
+  const language = document.getElementById("languageSelect").value;
+  
+  if (!audioInput) {
+    alert("Please select an audio file.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('audio', audioInput);
+  formData.append('language', language);
+
+  try {
+    const response = await fetch("{% url 'upload_audio' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    const extractedText = data.translated_text || data.error || "Audio upload failed.";
+    result.innerHTML = `<p>${extractedText}</p>`;
+    
+    // Optional: Speak the extracted text using the avatar
+    speakText(extractedText, language);
+  } catch (error) {
+    console.error("Error uploading audio file:", error);
+    alert("An error occurred while uploading the audio file.");
+  }
+});
+
+
+  </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

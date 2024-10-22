@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multilingual Translator with Avatar</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h2>Multilingual Translator</h2>
+    </header>
+    <h1>{{ input_language }} --------------- {{ output_language }}</h1>
+    <div class="box">
+      <div class="box1">
+        <div class="box11">
+          <div class="flex-section">
+            <textarea id="textInput" placeholder="Enter text to translate..."></textarea>
+            <button id="translateTextButton">Translate & Speak Text</button>
+          </div>
+
+          <h2>Upload Image for OCR</h2>
+          <input type="file" id="imageInput" accept="image/*" />
+          <button id="uploadImageButton">Upload Image</button>
+
+          <h2>Upload Audio for Speech-to-Text</h2>
+          <input type="file" id="audioInput" accept="audio/mp3" />
+          <button id="uploadAudioButton">Upload Audio</button>
+
+          <div class="result-container" id="result">
+            <p>Translated or Extracted Text will appear here...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box2">
+        <video id="avatar" class="avatar" muted loop>
+          <source src="{% static 'images/avatar2.mp4' %}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const translateTextButton = document.getElementById("translateTextButton");
+    const uploadImageButton = document.getElementById("uploadImageButton");
+    const uploadAudioButton = document.getElementById("uploadAudioButton");
+    const result = document.getElementById("result");
+    const avatar = document.getElementById("avatar");
+    const synth = window.speechSynthesis;
+
+    // Load voices when they change
+    window.speechSynthesis.onvoiceschanged = function () {
+      const voices = speechSynthesis.getVoices();
+      voices.forEach(function (voice) {
+        console.log(voice.name + ' (' + voice.lang + ')');
+      });
+    };
+
+    function speakText(text, language) {
+      const utterThis = new SpeechSynthesisUtterance(text);
+      utterThis.lang = language;
+
+      const voices = speechSynthesis.getVoices();
+      let selectedVoice = voices.find(voice => voice.lang === language);
+
+      if (selectedVoice) {
+        utterThis.voice = selectedVoice;
+      }
+
+      // Delay speaking to allow voices to load
+      setTimeout(() => {
+        avatar.play();
+        avatar.classList.add("talking");
+        synth.speak(utterThis);
+      }, 100);
+
+      utterThis.onend = function () {
+        avatar.pause();
+        avatar.currentTime = 0;
+        avatar.classList.remove("talking");
+      };
+    }
+
+    // Translate Text and Speak
+    translateTextButton.addEventListener("click", async function () {
+      const text = document.getElementById("textInput").value;
+      const language = "{{ output_language }}"; // Use output language from Django context
+
+      if (text.trim() !== "") {
+        const response = await fetch("{% url 'translate' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: new URLSearchParams({
+            'text': text,
+            'language': language
+          })
+        });
+
+        const data = await response.json();
+        const translatedText = data.translated_text || "Translation failed.";
+        result.innerHTML = `<p>${translatedText}</p>`;
+        speakText(translatedText, language);
+      } else {
+        alert("Please enter some text.");
+      }
+    });
+
+    // Image upload functionality
+    uploadImageButton.addEventListener("click", async function () {
+      const imageInput = document.getElementById("imageInput").files[0];
+
+      if (!imageInput) {
+        alert("Please select an image file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', imageInput);
+      formData.append('input_language', "{{ input_language }}"); // Use input language from Django context
+      formData.append('output_language', "{{ output_language }}"); // Use output language from Django context
+
+      try {
+        const response = await fetch("{% url 'upload_image' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        const extractedText = data.translated_text || data.error || "Image upload failed.";
+        result.innerHTML = `<p>${extractedText}</p>`;
+        speakText(extractedText, "{{ output_language }}"); // Use output language
+      } catch (error) {
+        console.error("Error uploading image file:", error);
+        alert("An error occurred while uploading the image file.");
+      }
+    });
+
+    // Audio upload functionality
+    uploadAudioButton.addEventListener("click", async function () {
+      const audioInput = document.getElementById("audioInput").files[0];
+
+      if (!audioInput) {
+        alert("Please select an audio file.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('audio', audioInput);
+      formData.append('input_language', "{{ input_language }}"); // Use input language from Django context
+      formData.append('output_language', "{{ output_language }}"); // Use output language from Django context
+
+      try {
+        const response = await fetch("{% url 'upload_audio' %}", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}"
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+        const extractedText = data.translated_text || data.error || "Audio upload failed.";
+        result.innerHTML = `<p>${extractedText}</p>`;
+        speakText(extractedText, "{{ output_language }}"); // Use output language
+      } catch (error) {
+        console.error("Error uploading audio file:", error);
+        alert("An error occurred while uploading the audio file.");
+      }
+    });
+  </script>
+</body>
+
+</html>

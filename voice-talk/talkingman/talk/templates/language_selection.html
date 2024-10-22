@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language Selection</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    /* Button styles */
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      margin: 5px;
+    }
+
+    /* Normal button state */
+    button:not(:disabled) {
+      background-color: #007bff; /* Bootstrap primary color */
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    /* Disabled button state */
+    button:disabled {
+      background-color: #c0c0c0; /* Light gray color */
+      color: #7d7d7d; /* Dark gray text color */
+      cursor: not-allowed; /* Change cursor to indicate non-clickable */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h2>AI Based Language Interpreter Using AR Model</h2>
+    </header>
+    <h2>Select Languages</h2>
+    <div class="selection_box">
+      <!-- Form to pass the selected languages -->
+      <form action="{% url 'index_selection' %}" method="POST">
+        {% csrf_token %}
+        <!-- Input Language Selection -->
+        <div>
+          <label for="inputLanguage">Select Input Language:</label>
+          <select id="inputLanguage" name="inputLanguage" onchange="checkSelection()">
+            <option value="">Select Language</option>
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="te">Telugu</option>
+            <option value="ta">Tamil</option>
+            
+            <!-- Add more languages as needed -->
+          </select>
+        </div>
+
+        <!-- Output Language Selection -->
+        <div>
+          <label for="outputLanguage">Select Output Language:</label>
+          <select id="outputLanguage" name="outputLanguage" onchange="checkSelection()">
+            <option value="">Select Language</option>
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="te">Telugu</option>
+            <option value="ta">Tamil</option>
+            
+            <!-- Add more languages as needed -->
+          </select>
+        </div>
+
+        <!-- Submit Button to send form data -->
+        <button type="button" onclick="exit()">Exit</button>
+        <button type="submit" id="nextButton" disabled>Next</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    function exit() {
+      window.location.href = "{% url 'login' %}";
+    }
+
+    function checkSelection() {
+      const inputLanguage = document.getElementById("inputLanguage").value;
+      const outputLanguage = document.getElementById("outputLanguage").value;
+      const nextButton = document.getElementById("nextButton");
+
+      // Enable the Next button only if both languages are selected and not the default
+      if (inputLanguage && outputLanguage) {
+        nextButton.disabled = false; // Enable the Next button
+      } else {
+        nextButton.disabled = true; // Disable the Next button
+      }
+  
+    }
+  </script>
+</body>
+
+</html>

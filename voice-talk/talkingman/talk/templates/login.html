@@ -1,0 +1,90 @@
+  {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: absolute;
+            Left:50%;
+            top:50%;
+            transform: translate(-50%, -50%);
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h2>AI Based Language Interpreter Using AR Model</h2>
+        </header>
+
+        <div class="login-container">
+            <h1>Login</h1>
+            {% if error_message %}
+            <p class="error-message">{{ error_message }}</p>
+            {% endif %}
+
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <input type="text" name="username" placeholder="Username" required />
+                <input type="password" name="password" placeholder="Password" required />
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

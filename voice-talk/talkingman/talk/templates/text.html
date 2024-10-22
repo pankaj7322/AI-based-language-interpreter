@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Based Language Interpreter Using AR Model</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h2>AI Based Language Interpreter Using AR Model</h2>
+        </header>
+        <div class="language">
+            <h1>{{ input_language }} --- {{ output_language }}</h1>
+        </div>
+
+        <div class="wrapper">
+
+            <!-- Text Input Section -->
+            <div class="text-box-container">
+                <div class="flex-section">
+                    <textarea id="textInput" placeholder="Enter text to translate..."></textarea>
+                    <button id="translateTextButton">Translate & Speak Text</button>
+                </div>
+                <div class="next-button-container" style="margin-top: 20px;">
+                    <button id="BackButton">Back</button>
+                </div>
+            </div>
+
+            <!-- Avatar Section -->
+            <div class="avatar-container">
+                <video id="avatar" class="avatar" muted loop>
+                    <source src="{% static 'images/AR.mp4' %}" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <!-- Display Translated Text -->
+            <div class="result-container" id="result">
+                <p>Translated Text will appear here...</p>
+            </div>
+
+        </div>
+        <!-- Next Button Section -->
+
+    </div>
+
+    <script>
+        const translateTextButton = document.getElementById("translateTextButton");
+        const result = document.getElementById("result");
+        const avatar = document.getElementById("avatar");
+        const synth = window.speechSynthesis;
+
+        window.speechSynthesis.onvoiceschanged = function () {
+            const voices = speechSynthesis.getVoices();
+            voices.forEach(function (voice) {
+                console.log(voice.name + ' (' + voice.lang + ')');
+            });
+        };
+
+        function speakText(text, language) {
+            const utterThis = new SpeechSynthesisUtterance(text);
+            utterThis.lang = language;
+
+            const voices = speechSynthesis.getVoices();
+            let selectedVoice = voices.find(voice => voice.lang.includes(language));
+
+            if (selectedVoice) {
+                utterThis.voice = selectedVoice;
+            } else {
+                console.warn(`Voice for ${language} not found. Using default voice.`);
+                utterThis.voice = voices[0]; // Fallback to the first available voice
+            }
+
+            avatar.play();
+            avatar.classList.add("talking");
+            synth.speak(utterThis);
+
+            utterThis.onend = function () {
+                avatar.pause();
+                avatar.currentTime = 0;
+                avatar.classList.remove("talking");
+            };
+
+            utterThis.onerror = function (event) {
+                console.error('Speech synthesis error:', event.error);
+            };
+        }
+
+        translateTextButton.addEventListener("click", async function () {
+            const text = document.getElementById("textInput").value;
+            const language = "{{ output_language }}";
+
+            if (text.trim() !== "") {
+                try {
+                    const response = await fetch("{% url 'translate' %}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "X-CSRFToken": "{{ csrf_token }}"
+                        },
+                        body: new URLSearchParams({
+                            'text': text,
+                            'language': language
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    const translatedText = data.translated_text || "Translation failed.";
+                    result.innerHTML = `<p>${translatedText}</p>`;
+                    speakText(translatedText, language);
+                } catch (error) {
+                    console.error('There was a problem with the fetch operation:', error);
+                    result.innerHTML = `<p>Error occurred: ${error.message}</p>`;
+                }
+            } else {
+                alert("Please enter some text.");
+            }
+        });
+
+
+        // Redirect to Home Page
+        const nextButton = document.getElementById("BackButton");
+        nextButton.addEventListener("click", function () {
+            // Replace 'home_page' with the actual URL name for the home page in your Django app.
+            window.location.href = "{% url 'select_language' %}";
+        });
+    </script>
+</body>
+
+</html>
